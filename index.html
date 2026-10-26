@@ -1,0 +1,730 @@
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Hotspot: Онбординг (B2+)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* layout: unified onboarding dossier for B2+ — top-level tabs (Загальна / До
+     початку / Під час навчання), each with a sticky subsection rail (left column
+     on desktop, horizontal strip on mobile) + scrollspy. Stats render as a bordered
+     data readout, long lists (values, academic honesty, FAQ) use a hover/focus
+     accordion ported from the house "Правила гри" page, re-themed onto these tokens. */
+  :root{
+    --bg:#faf9f5;
+    --panel:#f1efe6;
+    --ink:#17160f;
+    --ink-soft:#6b6a60;
+    --accent:#ee0012;
+    --accent-ink:#ffffff;
+    --line:#ddd9cd;
+    --font-display:'Oswald',system-ui,-apple-system,sans-serif;
+    --font-body:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+    --font-mono:ui-monospace,'SF Mono','Roboto Mono',Menlo,Consolas,monospace;
+    color-scheme:light;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#121110;
+      --panel:#1c1a16;
+      --ink:#f2f0e9;
+      --ink-soft:#9a978c;
+      --accent:#ff3b2f;
+      --accent-ink:#ffffff;
+      --line:#322f28;
+      color-scheme:dark;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#121110;
+    --panel:#1c1a16;
+    --ink:#f2f0e9;
+    --ink-soft:#9a978c;
+    --accent:#ff3b2f;
+    --accent-ink:#ffffff;
+    --line:#322f28;
+    color-scheme:dark;
+  }
+
+  html{-webkit-text-size-adjust:100%; text-size-adjust:100%}
+  *{box-sizing:border-box; line-height:1.5}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--font-body);
+    font-size:16px;
+    line-height:1.6;
+    -webkit-text-size-adjust:100%;
+    text-size-adjust:100%;
+    padding-left:max(18px, env(safe-area-inset-left,0px));
+    padding-right:max(18px, env(safe-area-inset-right,0px));
+    scroll-behavior:smooth;
+  }
+  body::before{
+    content:"";
+    position:fixed;
+    inset:0 0 auto;
+    height:env(safe-area-inset-top,0px);
+    z-index:12;
+    background:var(--bg);
+  }
+  p{margin:0; line-height:1.65}
+  li{line-height:1.6}
+  a{color:inherit}
+  strong{color:var(--accent)}
+  [hidden]{display:none!important}
+
+  h1,h2,h3{
+    font-family:var(--font-display);
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:0.002em;
+    line-height:1.08;
+    margin:0;
+  }
+  .mono{font-family:var(--font-mono); letter-spacing:0.02em}
+
+  /* ---- header: plain label on the page's own light background ---- */
+  .docstrip{
+    background:var(--bg);
+    border-bottom:1px solid var(--line);
+    margin-inline:max(-18px, calc(-1 * env(safe-area-inset-left,0px) - 18px));
+  }
+  .docstrip-top{
+    max-width:980px;
+    margin:0 auto;
+    padding:14px max(18px, env(safe-area-inset-left,0px)) 12px max(18px, env(safe-area-inset-right,0px));
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+  }
+  .docstrip-top .logo-plate{display:block; height:20px; width:auto}
+  .doc-id{
+    font-family:var(--font-mono);
+    font-size:11px;
+    font-weight:600;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+  }
+
+  /* ---- level 1: part tabs — own menu, kept visually separate from the
+     logo header strip above (not fused into one block) ---- */
+  .part-tabs-wrap{
+    position:sticky;
+    top:env(safe-area-inset-top,0px);
+    z-index:11;
+    background:var(--bg);
+    padding-top:12px;
+    margin-inline:max(-18px, calc(-1 * env(safe-area-inset-left,0px) - 18px));
+  }
+  .part-tabs{
+    background:#121110;
+    display:flex;
+    max-width:980px;
+    margin:0 max(18px, env(safe-area-inset-left,0px));
+    border-radius:3px;
+    box-shadow:0 6px 14px -8px rgba(0,0,0,.35);
+  }
+  @media (min-width:1018px){ .part-tabs{ margin-inline:auto } }
+  .part-tabs button{
+    appearance:none;
+    border:0;
+    flex:1 1 0;
+    background:transparent;
+    color:#9a978c;
+    font-family:var(--font-body);
+    font-size:12.5px;
+    font-weight:700;
+    letter-spacing:0.01em;
+    text-transform:uppercase;
+    padding:13px 10px;
+    cursor:pointer;
+    border-bottom:2px solid transparent;
+  }
+  .part-tabs button + button{border-left:1px solid #2a2820}
+  .part-tabs button.active{color:#fff; border-bottom-color:var(--accent); background:#1a1814}
+  .part-tabs button:hover{color:#fff}
+
+  .shell{max-width:980px; margin:0 auto}
+  .part{padding-bottom:60px}
+
+  .eyebrow{font-size:11px; font-weight:600; letter-spacing:0.08em; color:var(--accent); text-transform:uppercase; margin-bottom:10px}
+  .intro{padding-top:36px; padding-bottom:8px; display:flex; gap:36px; align-items:flex-start; justify-content:space-between}
+  .intro-text{flex:1 1 420px; min-width:0}
+  .intro .eyebrow{margin-bottom:16px}
+  .intro h1{font-size:clamp(30px,6.5vw,46px); margin-bottom:20px; max-width:15ch}
+  .intro .lead{font-size:17px; line-height:1.65; font-weight:400; max-width:56ch; margin-bottom:12px}
+  .intro .lead-sub{font-size:14px; line-height:1.65; color:var(--ink-soft); max-width:56ch}
+  [data-part="during"] .intro h1{max-width:24ch}
+
+  .intro-visual{flex:0 0 auto; width:230px; max-width:34vw; height:auto; display:block; margin-top:6px}
+  @media (max-width:760px){
+    .intro{flex-direction:column}
+    .intro-visual{width:100%; max-width:260px; margin:22px auto 0; align-self:center}
+  }
+
+  /* ---- mid-page section divider: marks the shift from general info to
+     the pre-course checklist, without being a separate top-level tab ---- */
+  .section-divider{border-top:3px solid var(--ink)!important; padding-top:40px!important}
+  .section-divider h2{margin-bottom:10px}
+  .section-divider > p.eyebrow + h2 + p{color:var(--ink-soft)}
+
+  /* ---- level 2 layout: sticky rail + content ---- */
+  .part-layout{display:flex; gap:44px; align-items:flex-start; padding-top:30px}
+  .rail{
+    flex:0 0 180px;
+    position:sticky;
+    top:calc(env(safe-area-inset-top,0px) + 62px);
+    display:flex;
+    flex-direction:column;
+    gap:1px;
+    max-height:calc(100vh - env(safe-area-inset-top,0px) - 82px);
+    overflow-y:auto;
+  }
+  .rail a{
+    font-size:12.5px;
+    line-height:1.4;
+    font-weight:600;
+    color:var(--ink-soft);
+    text-decoration:none;
+    padding:8px 10px;
+    border-left:2px solid transparent;
+  }
+  .rail a.current{color:var(--ink); border-left-color:var(--accent); background:var(--panel)}
+  .rail a:hover{color:var(--ink)}
+
+  .content{flex:1; min-width:0; max-width:640px}
+  .block{padding-top:46px}
+  .block:first-child{padding-top:0}
+  .block + .block{border-top:1px dashed var(--line)}
+  .block h2{font-size:clamp(21px,4vw,27px); margin-bottom:22px; max-width:20ch}
+  .block > p{font-size:15.5px; line-height:1.68; font-weight:400; max-width:60ch}
+  .subblock{margin-top:26px}
+  .subblock h3{
+    font-family:var(--font-body);
+    font-weight:700;
+    text-transform:none;
+    letter-spacing:0;
+    font-size:15.5px;
+    line-height:1.4;
+    margin-bottom:10px;
+  }
+  .subblock p{font-size:15px; line-height:1.66; max-width:60ch}
+  .subblock p + p{margin-top:10px}
+  ul.quick + .subblock{border-top:1px dashed var(--line); padding-top:24px}
+
+  @media (max-width:760px){
+    .part-layout{display:block; padding-top:0}
+    .rail{
+      position:sticky;
+      top:calc(env(safe-area-inset-top,0px) + 66px);
+      z-index:8;
+      flex-direction:row;
+      overflow-x:auto;
+      overflow-y:visible;
+      max-height:none;
+      gap:2px;
+      background:var(--bg);
+      padding:12px 0 12px;
+      margin-top:4px;
+      margin-bottom:6px;
+      border-bottom:1px solid var(--line);
+      box-shadow:0 -6px 6px -6px rgba(0,0,0,.08);
+      scrollbar-width:none;
+    }
+    .rail::-webkit-scrollbar{display:none}
+    .rail a{flex:none; white-space:nowrap; border-left:0; border-bottom:2px solid transparent}
+    .rail a.current{border-left:0; border-bottom-color:var(--accent); background:transparent}
+    .content{max-width:100%}
+  }
+
+  /* ---- readout bar (stats) ---- */
+  .readout{display:flex; flex-wrap:wrap; border:1px solid var(--line); margin:20px 0 26px}
+  .readout .cell{flex:1 1 150px; padding:16px 14px; border-left:1px solid var(--line)}
+  .readout .cell:first-child{border-left:none}
+  .readout .cell b{display:block; font-family:var(--font-mono); font-size:clamp(19px,4vw,25px); font-weight:400; line-height:1.2; color:var(--accent); margin-bottom:5px}
+  .readout .cell span{display:block; font-size:10.5px; line-height:1.35; font-weight:600; text-transform:uppercase; letter-spacing:0.03em; color:var(--ink-soft)}
+  p.below-readout{font-size:14.5px; line-height:1.65; color:var(--ink-soft); max-width:60ch}
+
+  /* ---- stamped callout (tests & dismissal — always visible, not accordion) ---- */
+  .stamp-box{margin-top:30px; border:1px solid var(--ink); padding:20px 22px}
+  .stamp-box .stamp{display:inline-block; font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; color:var(--accent-ink); background:var(--accent); padding:4px 10px; margin-bottom:14px}
+  .stamp-box p{font-size:14.5px; line-height:1.65; max-width:58ch}
+  .stamp-box p + p{margin-top:10px}
+  .stamp-box .fine{font-size:12.5px; color:var(--ink-soft)}
+
+  /* ---- accordion: hover/focus expand, ported from the house "Правила гри" page ---- */
+  .accordion{margin-top:4px}
+  .a-item{display:flex; gap:14px; padding:12px 12px; margin:0 -12px; cursor:default; outline:none; transition:background .18s, color .18s}
+  .a-item:hover, .a-item:focus, .a-item:focus-within{background:var(--accent); color:#fff}
+  .a-num{font-family:var(--font-mono); font-weight:600; font-size:13px; line-height:1.3; width:22px; flex:none; color:var(--accent); transition:color .18s}
+  .a-item:hover .a-num, .a-item:focus-within .a-num{color:#fff}
+  .a-lead{font-weight:600; font-size:14.5px; line-height:1.4}
+  .a-body{display:grid; grid-template-rows:0fr; transition:grid-template-rows .25s ease}
+  .a-body > div{overflow:hidden}
+  .a-body p{margin:6px 0 0; font-size:13.5px; line-height:1.55}
+  .a-body a{color:var(--accent); font-weight:700}
+  .a-item:hover .a-body a, .a-item:focus-within .a-body a{color:#fff}
+  .a-item:hover .a-body, .a-item:focus .a-body, .a-item:focus-within .a-body{grid-template-rows:1fr}
+
+  /* ---- numbered rows (no counters, plain mono numerals) ---- */
+  .rows{list-style:none; margin:16px 0 0; padding:0; display:flex; flex-direction:column}
+  .rows li{display:flex; gap:16px; padding:14px 0; font-size:14.5px; line-height:1.6; font-weight:400}
+  .rows li + li{border-top:1px dashed var(--line)}
+  .rows li .idx{flex:none; width:22px; font-family:var(--font-mono); font-size:13px; line-height:1.6; color:var(--accent)}
+  p.note{margin-top:16px; font-size:13.5px; line-height:1.6; color:var(--ink-soft)}
+  p.note::before{content:"→ "; color:var(--accent)}
+
+  .fill-card{margin-top:16px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; background:var(--panel); border:1px dashed var(--ink-soft); padding:13px 15px}
+  .fill-card .label{font-family:var(--font-mono); font-size:11.5px; line-height:1.4; letter-spacing:0.02em; text-transform:uppercase}
+  .todo-chip{display:inline-block; font-size:10.5px; line-height:1.3; font-weight:700; text-transform:uppercase; letter-spacing:0.02em; text-decoration:none; color:#fff; background:var(--accent); padding:5px 10px; white-space:nowrap}
+
+  /* ---- checklist ---- */
+  .checklist{display:flex; flex-direction:column; border:1px solid var(--line); margin-top:16px}
+  .check-item{display:flex; align-items:center; gap:13px; padding:14px 15px; font-size:14.5px; line-height:1.5; cursor:pointer}
+  .check-item + .check-item{border-top:1px solid var(--line)}
+  .check-item input{appearance:none; flex:none; width:18px; height:18px; border:1.5px solid var(--ink-soft); position:relative; cursor:pointer}
+  .check-item input:checked{background:var(--accent); border-color:var(--accent)}
+  .check-item input:checked::after{content:""; position:absolute; left:5px; top:1px; width:4px; height:9px; border:solid #fff; border-width:0 2px 2px 0; transform:rotate(45deg)}
+  .check-item label{cursor:pointer; flex:1; min-width:0; line-height:1.5}
+  .check-item.done label{color:var(--ink-soft); text-decoration:line-through}
+
+  /* ---- contacts manifest ---- */
+  .manifest{display:flex; flex-direction:column; border-top:1px solid var(--line); margin-top:16px}
+  .manifest-row{display:flex; flex-wrap:wrap; gap:4px 20px; padding:16px 0; border-bottom:1px solid var(--line)}
+  .manifest-row .tag{flex:0 0 150px; font-family:var(--font-mono); font-size:11.5px; line-height:1.4; font-weight:600; color:var(--accent); text-transform:uppercase; letter-spacing:0.02em}
+  .manifest-row p{flex:1 1 240px; font-size:14px; line-height:1.6; color:var(--ink-soft); min-width:0}
+
+  .contact-card{margin-top:16px; display:flex; align-items:center; gap:14px; flex-wrap:wrap; background:var(--panel); border:1px dashed var(--ink-soft); padding:14px 16px}
+  .contact-text{flex:1 1 160px; min-width:0; display:flex; flex-direction:column; gap:2px}
+  .contact-text .mono{font-size:10.5px; line-height:1.4; color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.02em}
+  .contact-text .name{font-size:15.5px; line-height:1.4; font-weight:600}
+  .contact-action{flex:none; display:flex; align-items:center; gap:10px}
+  .avatar-photo{flex:none; width:56px; height:56px; border-radius:50%; object-fit:cover; display:block}
+
+  ul.plain{list-style:none; margin:16px 0 0; padding:0; display:flex; flex-direction:column; gap:12px}
+  ul.plain li{font-size:14.5px; line-height:1.6; font-weight:400; padding-left:16px; position:relative; max-width:60ch}
+  ul.plain li::before{content:"–"; position:absolute; left:0; color:var(--ink-soft)}
+
+  /* ---- video embed: real iframe. Claude's own Artifact preview blocks
+     third-party iframes (platform CSP), so this box renders blank there —
+     it plays correctly once the page is hosted outside claude.ai (GitHub
+     Pages, Vercel, etc.). ---- */
+  .video-embed{margin:16px 0 4px; display:block; background:var(--ink); color:#fff}
+  .video-embed .frame{aspect-ratio:16/9; position:relative; overflow:hidden; background:#000}
+  .video-embed .frame iframe{position:absolute; inset:0; width:100%; height:100%; border:0; display:block}
+  .video-embed .caption{padding:16px 18px}
+  .video-embed p{font-size:13.5px; line-height:1.55; font-weight:400; max-width:48ch; margin:0}
+  .video-embed .mono{font-size:10.5px; color:#9a978c; display:block; margin-bottom:4px}
+
+  ul.quick{list-style:none; margin:20px 0 0; padding:0; display:flex; flex-direction:column; gap:11px}
+  ul.quick li{font-size:14.5px; line-height:1.6; font-weight:400; padding-left:17px; position:relative; max-width:60ch}
+  ul.quick li::before{content:"→"; position:absolute; left:0; color:var(--accent); font-weight:700}
+
+  .tips-flow{column-width:220px; column-gap:28px; margin-top:22px}
+  .tips-flow .tip{break-inside:avoid; display:flex; gap:10px; padding:11px 0; border-top:1px dashed var(--line); font-size:13.5px; line-height:1.55}
+  .tips-flow .tip .idx{flex:none; font-family:var(--font-mono); font-size:11.5px; line-height:1.55; color:var(--accent)}
+
+  .transcript{display:flex; flex-direction:column; margin-top:6px}
+  .entry{padding:14px 0; border-top:1px dashed var(--line)}
+  .entry .mono{display:block; font-size:10.5px; line-height:1.4; color:var(--ink-soft); margin-bottom:6px}
+  .entry p{font-size:14px; line-height:1.62; max-width:60ch}
+
+  .battle-cry{margin-top:34px; font-family:var(--font-display); font-weight:700; text-transform:uppercase; font-size:clamp(18px,3.6vw,23px); line-height:1.3; text-align:center; padding:26px 20px; background:var(--accent); color:#fff}
+
+  .soon-chip{font-family:var(--font-mono); font-size:10.5px; line-height:1.3; color:var(--ink-soft); border:1px solid var(--line); padding:3px 9px; text-transform:uppercase}
+
+  footer{background:var(--ink); margin-inline:max(-18px, calc(-1 * env(safe-area-inset-left,0px) - 18px)); padding:44px max(18px, env(safe-area-inset-left,0px)) calc(44px + env(safe-area-inset-bottom,0px)) max(18px, env(safe-area-inset-right,0px))}
+  .footer-inner{max-width:980px; margin:0 auto; display:flex; flex-direction:column; align-items:center; gap:10px; text-align:center}
+  footer .logo-plate{height:26px; display:block}
+  footer .tagline{font-family:var(--font-mono); font-size:11px; line-height:1.4; letter-spacing:0.04em; color:#8a887e; text-transform:uppercase}
+</style>
+
+<div class="docstrip">
+  <div class="docstrip-top">
+    <img class="logo-plate" alt="Hotspot" src="logo.png">
+    <span class="doc-id">Onboarding B2+</span>
+  </div>
+</div>
+<div class="part-tabs-wrap">
+  <nav class="part-tabs" id="partTabs">
+    <button type="button" data-part="before" class="active">До початку</button>
+    <button type="button" data-part="during">Під час навчання</button>
+  </nav>
+</div>
+
+<div class="shell">
+
+  <!-- ============== ДО ПОЧАТКУ (загальне + підготовка, об'єднано) ============== -->
+  <section class="part active" data-part="before">
+    <div class="intro">
+      <div class="intro-text">
+        <p class="eyebrow">Онбординг · B2+ · читай один раз, далі — як довідка</p>
+        <h1>Привіт. Давай чесно?</h1>
+        <p class="lead">Hotspot — це точно не курс на годинку перед сном. Це 4 місяці інтенсиву, і результат залежить від того, скільки ти в нього вкладеш. Легко не буде. Зате буде зрозуміло, що робити — тому довірся нам та слухай уважно.</p>
+        <p class="lead-sub">Ця сторінка — те саме, що брошура на 10 хвилин, тільки зручніше: повертайся сюди в будь-який момент курсу, коли щось забудеш.</p>
+      </div>
+      <img class="intro-visual" src="hero-visual.png" alt="">
+    </div>
+
+    <div class="part-layout">
+      <nav class="rail" data-rail="before">
+        <a href="#g-expect">Що на тебе чекає</a>
+        <a href="#g-values">Цінності</a>
+        <a href="#g-who">Хто поруч</a>
+        <a href="#g-tests">Тести й відрахування</a>
+        <a href="#b-prep">Підготуйся заздалегідь</a>
+        <a href="#b-warmup">Warm-Up</a>
+        <a href="#b-survive">Як вижити</a>
+      </nav>
+      <div class="content">
+
+        <div class="block" id="g-expect">
+          <h2>Що на тебе чекає</h2>
+          <div class="readout">
+            <div class="cell"><b>4</b><span>місяці навчання</span></div>
+            <div class="cell"><b>3</b><span>заняття на тиждень</span></div>
+            <div class="cell"><b>1,5–3</b><span>год самостійної роботи щодня</span></div>
+            <div class="cell"><b>↻</b><span>щомісячне тестування</span></div>
+          </div>
+          <p class="below-readout">Якщо порахувати — це майже друга робота на неповну ставку. Тож питання не в тому, як вписати навчання у вільний час (спойлер: його майже ні в кого немає), а в тому, чи готовий ти поставити на 4-місячну паузу своє звичне життя, щоб вивчити нарешті англійську до необхідного тобі рівня.</p>
+
+          <div class="subblock">
+            <h3>Перший місяць — найважчий?</h3>
+            <p>Для більшості студентів — так. Спочатку буде складно, інформації буде багато. У якийсь момент може здатись, що ми перестарались. Це нормально. Дай собі час втягнутись і слухай викладачів: вони грають у твоїй команді, а не проти тебе.</p>
+            <p>Чому так багато? Бо програма курсу побудована як інтенсив: те, що зазвичай розтягують на 8–9 місяців, ми проходимо за 4. Тому свідомо даємо трохи більше, ніж комфортно. Але мозок успішно адаптується, і прогрес відбувається швидше.</p>
+          </div>
+
+          <div class="subblock">
+            <h3>Домашка</h3>
+            <p>Її буде немало, але це необхідно. Письмові завдання роби там, де зручно: у зошиті чи в електронному документі. Надсилати наперед не потрібно. Головне, щоб вона була під рукою на уроці.</p>
+            <p>Але будь уважним: на курсі будуть й інші формати завдань, де важливо слідкувати за дедлайнами — детальніше про них у частині «Під час навчання».</p>
+          </div>
+        </div>
+
+        <div class="block" id="g-values">
+          <h2>Цінності</h2>
+          <div class="accordion">
+            <div class="a-item" tabindex="0"><span class="a-num mono">01</span><div><div class="a-lead">Правила для всіх</div><div class="a-body"><div><p>Є спільні правила та домовленості. Їх дотримуються всі сторони.</p></div></div></div></div>
+            <div class="a-item" tabindex="0"><span class="a-num mono">02</span><div><div class="a-lead">Зворотний зв'язок</div><div class="a-body"><div><p>Щось не працює чи незручно? Обговорюємо. Фідбек для нас робочий інструмент.</p></div></div></div></div>
+            <div class="a-item" tabindex="0"><span class="a-num mono">03</span><div><div class="a-lead">Люди важливіші за регламенти</div><div class="a-body"><div><p>Враховуємо контекст і допомагаємо розібратись, але відповідальність за дії лишається за тобою.</p></div></div></div></div>
+            <div class="a-item" tabindex="0"><span class="a-num mono">04</span><div><div class="a-lead">Прогрес, а не безпомилковість</div><div class="a-body"><div><p>Помилки — це частина процесу. Повторюються? Роби висновки та змінюй підхід.</p></div></div></div></div>
+            <div class="a-item" tabindex="0"><span class="a-num mono">05</span><div><div class="a-lead">Атмосфера</div><div class="a-body"><div><p>Жартувати можна і треба, але без токсичності, знецінення та переходів на особистості.</p></div></div></div></div>
+            <div class="a-item" tabindex="0"><span class="a-num mono">06</span><div><div class="a-lead">Група</div><div class="a-body"><div><p>Це велика частина твого результату. Підтримуйте одне одного та діліться лайфхаками.</p></div></div></div></div>
+          </div>
+        </div>
+
+        <div class="block" id="g-who">
+          <h2>Хто поруч</h2>
+          <div class="manifest">
+            <div class="manifest-row"><span class="tag">Викладачі</span><p>Питай про все, що стосується навчання та матеріалів.</p></div>
+            <div class="manifest-row"><span class="tag">Курс-менеджерка</span><p>Розклад, відвідування, правила навчання, технічні проблеми з платформою — або якщо не знаєш, до кого звернутись.</p></div>
+            <div class="manifest-row"><span class="tag">Група</span><p>Підтримка, практика і відчуття, що ти в цьому не один.</p></div>
+          </div>
+          <p style="margin-top:16px; font-size:14px; line-height:1.6; color:var(--ink-soft)">Разом вони працюють значно краще, ніж поодинці.</p>
+
+          <div class="subblock">
+            <h3>Куди і як писати</h3>
+            <ul class="plain">
+              <li>У Telegram-чат групи або в особисті повідомлення (в межах робочих годин, якщо це не критично — ми за повагу один до одного). У чаті тегай того, кому адресоване питання.</li>
+              <li>Дзвінки — на випадок критичних ситуацій. Спершу напиши курс-менеджерці в особисті, і домовимось про дзвінок.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="block" id="g-tests">
+          <h2>Тести й відрахування</h2>
+          <p><strong>«Мене відрахують, якщо я робитиму помилки в домашці чи на уроках?»</strong> Ні.</p>
+          <div class="stamp-box">
+            <span class="stamp">⚠ Коли відраховуємо</span>
+            <p>Щомісяця ти пишеш тест з кожного аспекту: говоріння, аудіювання, граматика. Вони стануть індикатором твого прогресу. Лише якщо середній результат успішності наприкінці місяця нижчий за <strong>55%</strong>, ми відраховуємо. У перший і в останній місяць відрахувань немає.</p>
+            <p class="fine">Англійська не прокачується «сама собою»: потрібні регулярність, дисципліна і спільний темп. Правила не проти тебе, вони допомагають тримати фокус.</p>
+          </div>
+        </div>
+
+        <div class="block section-divider" id="b-prep">
+          <p class="eyebrow">До початку · прочитай за тиждень до першого заняття</p>
+          <h2>Підготуйся заздалегідь</h2>
+          <p>Чотири речі, які варто зробити ще до першого уроку — щоб перший місяць пройшов без зайвого стресу.</p>
+
+          <div class="subblock">
+            <h3>Графік</h3>
+            <p style="font-size:14.5px; line-height:1.6; color:var(--ink-soft)">Відкрий календар на найближчі 4 місяці і зроби наступне вже зараз:</p>
+            <ol class="rows">
+              <li><span class="idx mono">01</span><span>Додай собі Google-календар своєї групи — всі уроки там вже позначені.</span></li>
+              <li><span class="idx mono">02</span><span>Одразу заплануй слоти на домашку: щодня 1,5–3 години.</span></li>
+              <li><span class="idx mono">03</span><span>Прибери або переплануй події, які конфліктують із заняттями.</span></li>
+              <li><span class="idx mono">04</span><span>Якщо перенести не вийде — скажи про це курс-менеджерці Соні заздалегідь.</span></li>
+            </ol>
+            <div class="fill-card">
+              <span class="label mono">Календар групи</span>
+              <span class="todo-chip">Додати посилання</span>
+            </div>
+            <p class="note">Не намагайся вписати Hotspot у вільний час. Вільного часу не буде. Заздалегідь створи для нього місце.</p>
+          </div>
+
+          <div class="subblock">
+            <h3>Середовище</h3>
+            <div class="checklist" id="checklist">
+              <div class="check-item" data-id="cb-calendar"><input type="checkbox" id="cb-calendar"><label for="cb-calendar">Календар налаштований, домашка вже має свої слоти</label></div>
+              <div class="check-item" data-id="cb-zoom"><input type="checkbox" id="cb-zoom"><label for="cb-zoom">Zoom завантажений та працює</label></div>
+              <div class="check-item" data-id="cb-gear"><input type="checkbox" id="cb-gear"><label for="cb-gear">Навушники, мікрофон і камера перевірені (камера на заняттях обов'язкова)</label></div>
+              <div class="check-item" data-id="cb-room"><input type="checkbox" id="cb-room"><label for="cb-room">Є зручне тихе місце для занять</label></div>
+              <div class="check-item" data-id="cb-internet"><input type="checkbox" id="cb-internet"><label for="cb-internet">Є запасний інтернет, наприклад мобільні дані</label></div>
+              <div class="check-item" data-id="cb-notes"><input type="checkbox" id="cb-notes"><label for="cb-notes">Є зошит для кожного аспекту або файл для нотаток</label></div>
+            </div>
+          </div>
+
+          <div class="subblock">
+            <h3>Люди навколо тебе</h3>
+            <p>Розкажи родині, партнеру та колегам, що наступні чотири місяці тричі на тиждень у тебе Hotspot. Домовся про свій час заздалегідь.</p>
+          </div>
+        </div>
+
+        <div class="block" id="b-warmup">
+          <h2>Warm-Up <span class="soon-chip">Скоро</span></h2>
+          <p>Опційний розігрів перед стартом курсу для рівня B2+ — короткі вправи, щоб увійти в ритм ще до першого заняття. Матеріали зараз готуються, з'являться тут незабаром.</p>
+        </div>
+
+        <div class="block" id="b-survive">
+          <h2>Як вижити в Hotspot :)</h2>
+          <div class="video-embed">
+            <div class="frame">
+              <iframe src="https://www.youtube.com/embed/KOGH76iNndo?si=3xURPXDFqy3Lg6Ys" title="Як вижити в Hotspot — відео від Макса з Оксаною" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+            </div>
+            <div class="caption">
+              <span class="mono">ВІДЕО</span>
+              <p>Коротке відео від Макса з Оксаною про те, як пережити ці 4 місяці.</p>
+            </div>
+          </div>
+          <ul class="quick">
+            <li>Спочатку буде важче, ніж очікуєш.</li>
+            <li>Не намагайся робити все ідеально.</li>
+            <li>Не накопичуй борги.</li>
+            <li>Якщо починаєш відставати — скажи нам одразу.</li>
+            <li>Відчуття «я тут найтупіший» час від часу буде майже в усіх.</li>
+            <li>Регулярність важливіша за героїчні ривки.</li>
+          </ul>
+          <div class="subblock">
+            <h3>Поради тих, хто вже пройшов Hotspot</h3>
+            <div class="tips-flow">
+              <div class="tip"><span class="idx">01</span><span>Не відкладай всю домашку на один день. Вихідні закінчуються швидше.</span></div>
+              <div class="tip"><span class="idx">02</span><span>Не лякайся першого місяця. Далі стає зрозуміліше.</span></div>
+              <div class="tip"><span class="idx">03</span><span>Став домашку в календар. Якщо її там немає — її наче немає.</span></div>
+              <div class="tip"><span class="idx">04</span><span>Роби домашку в один і той самий час. Рутина рятує краще за силу волі.</span></div>
+              <div class="tip"><span class="idx">05</span><span>Говори на заняттях, навіть коли помиляєшся. Особливо тоді.</span></div>
+              <div class="tip"><span class="idx">06</span><span>Не порівнюй себе з групою. У всіх різні старти.</span></div>
+              <div class="tip"><span class="idx">07</span><span>Вчи слова в контексті, а не списками.</span></div>
+              <div class="tip"><span class="idx">08</span><span>Слухай англійську поза курсом: у дорозі, на кухні, на прогулянці.</span></div>
+              <div class="tip"><span class="idx">09</span><span>Якщо пропустив/ла заняття — передивись запис того ж дня.</span></div>
+              <div class="tip"><span class="idx">10</span><span>Не намагайся виправити все за один вечір перед тестом.</span></div>
+              <div class="tip"><span class="idx">11</span><span>Знайди в групі когось, з ким можна обговорити домашку.</span></div>
+              <div class="tip"><span class="idx">12</span><span>Святкуй дрібні перемоги. Перший діалог без шпаргалки теж результат.</span></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== ПІД ЧАС НАВЧАННЯ ============== -->
+  <section class="part" data-part="during" hidden>
+    <div class="intro">
+      <div class="intro-text">
+        <p class="eyebrow">Під час навчання · повертайся сюди, коли курс вже йде</p>
+        <h1>Коли курс уже йде</h1>
+        <p class="lead">Що робити, якщо пропускаєш урок, не встигаєш із дедлайном або відчуваєш, що відстаєш.</p>
+      </div>
+    </div>
+
+    <div class="part-layout">
+      <nav class="rail" data-rail="during">
+        <a href="#d-missed">Пропуск уроку</a>
+        <a href="#d-homework">Домашка й дедлайни</a>
+        <a href="#d-honesty">Academic honesty</a>
+        <a href="#d-behind">Якщо відстаєш</a>
+        <a href="#d-expelled">Якщо відрахували</a>
+        <a href="#d-continue">Не можеш продовжити</a>
+        <a href="#d-quotes">Слова випускників</a>
+      </nav>
+      <div class="content">
+
+        <div class="block" id="d-missed">
+          <h2>Пропуск уроку</h2>
+          <p>Напиши в чат групи й тегни викладача не пізніше, ніж за 30 хвилин до початку, щоб тобі зробили запис. Запис допомагає не втратити матеріал, але не замінює участь в уроці. Хвороба чи форс-мажор — пиши Соні.</p>
+          <div class="contact-card">
+            <span class="contact-text"><span class="mono">Курс-менеджерка</span><span class="name">Соня</span></span>
+            <span class="contact-action">
+              <img class="avatar-photo" src="sonya.jpg" alt="Соня, курс-менеджерка">
+              <a class="todo-chip" href="https://t.me/sophie_hotspot_english_school" target="_blank" rel="noopener">Написати</a>
+            </span>
+          </div>
+          <div class="accordion" style="margin-top:22px">
+            <div class="a-item" tabindex="0"><div><div class="a-lead">Чи можна без камери?</div><div class="a-body"><div><p>Ні. Без камери викладач не бачить твоєї реакції, а ти менш залучений. Камера — це твій зв'язок із викладачем і групою. Якщо на якомусь з уроків не зможеш увімкнути камеру, попередь викладача.</p></div></div></div></div>
+            <div class="a-item" tabindex="0"><div><div class="a-lead">Я хворію. Можна просто посидіти та послухати?</div><div class="a-body"><div><p>Вільний слухач — це як піти в спортзал і дивитись, як качаються інші. Хворієш чи погано почуваєшся? Краще подивись запис, коли стане краще, і перевіряй домашку під час перегляду.</p></div></div></div></div>
+          </div>
+        </div>
+
+        <div class="block" id="d-homework">
+          <h2>Домашка й дедлайни</h2>
+          <div class="accordion">
+            <div class="a-item" tabindex="0"><div><div class="a-lead">Де робити письмову домашку?</div><div class="a-body"><div><p>У зошиті чи будь-якому електронному документі. Завантажувати наперед не треба. Головне — мати її на уроці.</p></div></div></div></div>
+            <div class="a-item" tabindex="0"><div><div class="a-lead">Пропустив дедлайн із TOLs / ROLs</div><div class="a-body"><div><p>Прийми це, постав нагадування на наступний тиждень і рухайся далі. Якщо ігнорувати регулярно, прогрес сповільниться.</p></div></div></div></div>
+            <div class="a-item" tabindex="0"><div><div class="a-lead">Чому так багато інформації?</div><div class="a-body"><div><p>Бо це інтенсив: те, що зазвичай розтягують на 8–9 місяців, ми проходимо за 4. Трохи більше, ніж комфортно, але так мозок адаптується швидше. Відчуття перевантаження нормальне, з часом стає легше.</p></div></div></div></div>
+          </div>
+        </div>
+
+        <div class="block" id="d-honesty">
+          <h2>Academic honesty</h2>
+          <div class="accordion">
+            <div class="a-item" tabindex="0"><span class="a-num mono">01</span><div><div class="a-lead">Що це таке</div><div class="a-body"><div><p>Під час курсу ти погоджуєшся дотримуватись доброчесного самостійного навчання. Hotspot — це простір для прокачки англійської, а не для імітації результату за допомогою AI, перекладачів чи будь-якої іншої сторонньої допомоги. Усі домашні завдання, проміжні та фінальні тести ти виконуєш самостійно.</p></div></div></div></div>
+            <div class="a-item" tabindex="0"><span class="a-num mono">02</span><div><div class="a-lead">AI і перекладачі</div><div class="a-body"><div><p>Ми не можемо (і не будемо) забороняти тобі користуватися ChatGPT, іншими AI-інструментами чи онлайн-перекладачами. Ба більше, ми пояснимо та навчимо, як працювати з ними так, щоб це було ефективно і не шкодило навчанню.</p></div></div></div></div>
+            <div class="a-item" tabindex="0"><span class="a-num mono">03</span><div><div class="a-lead">Навіщо це все</div><div class="a-body"><div><p>Нам важливо, щоб максимум користі від навчання отримав саме ти і щоб англійська стала твоїм інструментом у реальному житті, а не лише в чаті з ботом.</p></div></div></div></div>
+            <div class="a-item" tabindex="0"><span class="a-num mono">04</span><div><div class="a-lead">Перевірки</div><div class="a-body"><div><p>Ми залишаємо за собою право перевіряти письмові та інші роботи на плагіат і несамостійне виконання за допомогою відповідних інструментів та внутрішньої експертизи. Якщо виявимо порушення, можемо не зарахувати завдання, анулювати тест (чи відправити на перескладання) і навіть не видати сертифікат.</p></div></div></div></div>
+            <div class="a-item" tabindex="0"><span class="a-num mono">05</span><div><div class="a-lead">Якщо є сумніви</div><div class="a-body"><div><p>Не погоджуєшся з рішенням або сумніваєшся, чи допустимо використовувати певні інструменти чи формати допомоги? Звернися до команди Hotspot до здачі завдання чи тесту, щоб усе уточнити.</p></div></div></div></div>
+            <div class="a-item" tabindex="0"><span class="a-num mono">06</span><div><div class="a-lead">Матеріали школи</div><div class="a-body"><div><p>Не поширюй відповіді тестів і матеріали з платформи My.Hotspot та чату групи без посилання на нашу школу та без попередньої згоди. Повне або часткове відтворення в публічному доступі без згоди — мінус 100 до карми. Фоточки смішних слайдів робити можна :)</p></div></div></div></div>
+          </div>
+        </div>
+
+        <div class="block" id="d-behind">
+          <h2>Якщо починаєш відставати</h2>
+          <p>Це може статись у кожного, з різних причин. Нічого страшного. Головне — не мовчи про це.</p>
+          <ol class="rows">
+            <li><span class="idx mono">01</span><span>Скажи викладачу або Соні одразу.</span></li>
+            <li><span class="idx mono">02</span><span>Напиши, що саме не виходить: часу немає, матеріал не заходить чи сталося життя.</span></li>
+            <li><span class="idx mono">03</span><span>Не надолужуй усе за одну ніч. Складемо реалістичний план разом.</span></li>
+          </ol>
+          <p class="note">Ми допоможемо розібратись, що пішло не так, і підкажемо, як рухатись далі.</p>
+        </div>
+
+        <div class="block" id="d-expelled">
+          <h2>Якщо відрахували</h2>
+          <p>Це неприємно, але ти знав правила. Напиши нам (без прокльонів) — допоможемо розібратись і дамо рекомендації. Це не клеймо, а результат.</p>
+        </div>
+
+        <div class="block" id="d-continue">
+          <h2>Не можеш продовжити</h2>
+          <p>Критична ситуація? Пиши, шукатимемо рішення. «Забагато роботи» — не причина. Кидаєш навчання = оплата згорає (місце в групі після старту закріплене за тобою).</p>
+        </div>
+
+        <div class="block" id="d-quotes">
+          <h2>Слова випускників</h2>
+          <div class="transcript">
+            <div class="entry"><span class="mono">ВІДГУК 01</span><p>Це того вартує, але тільки якщо готові ставити пріоритет на вивчення мови на наступні 4 місяці. І потрібно виділяти багато часу на це — без цього прогрес буде мінімальним.</p></div>
+            <div class="entry"><span class="mono">ВІДГУК 02</span><p>Не здаватись, воно того варте.</p></div>
+            <div class="entry"><span class="mono">ВІДГУК 03</span><p>Сумлінно виконувати всі завдання, не здаватися, йти до своєї мети.</p></div>
+            <div class="entry"><span class="mono">ВІДГУК 04</span><p>Якщо ти хочеш максимальный результат від курсу — відклади всі важливі справи на 4 місяці і поглибся у навчання. Тоді справді отримаєш крутий результат і +1 рівень англійської мови. А це реально круто за такий короткий термін.</p></div>
+            <div class="entry"><span class="mono">ВІДГУК 05</span><p>Спати, смачно їсти, не вибачатися перед рідними за свою відсутність. Це їх проблеми, якщо не почули вас з першого разу.</p></div>
+            <div class="entry"><span class="mono">ВІДГУК 06</span><p>Результат після навчання вартий ваших зусиль. І довіряйте системі школи та тому, що кажуть викладачі. Trust the process :)</p></div>
+            <div class="entry"><span class="mono">ВІДГУК 07</span><p>Робіть домашку!) Не користуйтеся GPT на іспитах.</p></div>
+            <div class="entry"><span class="mono">ВІДГУК 08</span><p>Якщо з'явиться думка здатись, пам'ятайте: курс закінчиться, а навички залишаться.</p></div>
+            <div class="entry"><span class="mono">ВІДГУК 09</span><p>Не кидати на першому місяці навчання! Робити домашку кожного дня потрошку, перемикаючись між дисциплінами. Не нехтувати заучуванням слів та переглядом англомовних фільмів тощо. Далі — легше!</p></div>
+            <div class="entry"><span class="mono">ВІДГУК 10</span><p>Будьте дисципліновані, не пропускайте уроки.</p></div>
+          </div>
+          <p class="battle-cry">Доєднуйся до спільноти тих,<br>хто рухає світ уперед 🤟</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <div class="footer-inner">
+    <img class="logo-plate" alt="Hotspot" src="logo.png">
+    <p class="tagline">No bullshit. English only.</p>
+  </div>
+</footer>
+
+<script>
+(function(){
+  /* ---- part tabs ---- */
+  var parts = Array.prototype.slice.call(document.querySelectorAll('.part'));
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('.part-tabs button'));
+  var VALID = parts.map(function(p){ return p.getAttribute('data-part'); });
+
+  function showPart(name, push){
+    if (VALID.indexOf(name) === -1) name = VALID[0];
+    parts.forEach(function(p){
+      var on = p.getAttribute('data-part') === name;
+      p.hidden = !on;
+      p.classList.toggle('active', on);
+    });
+    tabs.forEach(function(t){
+      t.classList.toggle('active', t.getAttribute('data-part') === name);
+    });
+    if (push !== false){
+      try { history.replaceState(null, '', '#' + name); } catch(e){}
+    }
+    window.scrollTo(0,0);
+    requestAnimationFrame(updateSpy);
+  }
+
+  tabs.forEach(function(t){
+    t.addEventListener('click', function(){ showPart(t.getAttribute('data-part')); });
+  });
+
+  var startHash = (location.hash || '').replace('#','');
+  showPart(VALID.indexOf(startHash) !== -1 ? startHash : VALID[0], false);
+
+  /* ---- subsection rail: click to scroll, scrollspy to highlight ---- */
+  document.querySelectorAll('.rail a').forEach(function(a){
+    a.addEventListener('click', function(ev){
+      ev.preventDefault();
+      var id = a.getAttribute('href').slice(1);
+      var el = document.getElementById(id);
+      if (!el) return;
+      var tabsH = (document.getElementById('partTabs') || {}).offsetHeight || 0;
+      var y = el.getBoundingClientRect().top + window.scrollY - tabsH - 56;
+      window.scrollTo({top:y, behavior:'smooth'});
+    });
+  });
+
+  function updateSpy(){
+    var active = document.querySelector('.part.active');
+    if (!active) return;
+    var partName = active.getAttribute('data-part');
+    var rail = document.querySelector('.rail[data-rail="' + partName + '"]');
+    if (!rail) return;
+    var blocks = Array.prototype.slice.call(active.querySelectorAll('.block[id]'));
+    var pos = window.scrollY + 140;
+    var currentId = blocks.length ? blocks[0].id : null;
+    blocks.forEach(function(b){
+      if (b.offsetTop <= pos) currentId = b.id;
+    });
+    rail.querySelectorAll('a').forEach(function(a){
+      a.classList.toggle('current', a.getAttribute('href') === '#' + currentId);
+    });
+  }
+  window.addEventListener('scroll', updateSpy, {passive:true});
+  window.addEventListener('resize', updateSpy);
+  updateSpy();
+
+  /* ---- checklist ---- */
+  var ids = ['cb-calendar','cb-zoom','cb-gear','cb-room','cb-internet','cb-notes'];
+  var KEY = 'hotspot-unified-checklist';
+  var state = {};
+  function load(){
+    try { var raw = localStorage.getItem(KEY); state = raw ? JSON.parse(raw) : {}; } catch(e){ state = {}; }
+  }
+  function save(){
+    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e){}
+  }
+  load();
+  ids.forEach(function(id){
+    var input = document.getElementById(id);
+    if (!input) return;
+    input.checked = !!state[id];
+    var row = input.closest('.check-item');
+    if (row) row.classList.toggle('done', input.checked);
+    input.addEventListener('change', function(){
+      state[id] = input.checked;
+      if (row) row.classList.toggle('done', input.checked);
+      save();
+    });
+  });
+})();
+</script>
